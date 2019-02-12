@@ -15,18 +15,19 @@ This repository contains material for PO843 *Maximum Likelihood Estimation*'s Rm
 Finally, this repository contains a "makefile" that automatically creates ".html" and ".pdf" out of "sample-ta.Rmd". According to Karl Broman, this is the most important tool to creating manuscripts for reproducible research, but it tends to be ignored. As "sample-ta.Rmd" creates both ".html" and ".pdf" documents and contains chunks whose functions depend on some parameters, a makefile automating file compilation is appropriate. 
 
 ## Repository organization
-
-|-- README.md                                           <- what you're reading right now
+```
+|-- README.md                                   <- what you're reading right now
 |-- data
 |       |-- bank-additional
 |               |-- bank-additional-full.csv
 |               |-- bank-additional.csv
 |               |-- bank-additional-names.txt
-|-- fig                                                             <- figure outputs from .Rmd
-|-- script                                                        <- .R script files
+|-- fig                                         <- plots saved to .png
+|-- script                                      <- .R script files
 |       |-- bank-marketing.R
-|-- tab                                                            <- tables saved to .txt files 
-|-- sample-ta.Rmd                                        <- .Rmd file 
-|-- sample.bib                                               <- .bib file for the .Rmd file 
-|-- Rmd_sample.Rproj                                   <- .Rproj that will set the working directory
-|-- Makefile                                                    <- makefile that will create "sample-ta.html" and "sample-ta.pdf"
+|-- tab                                         <- tables saved to .txt  
+|-- sample-ta.Rmd                                
+|-- sample.bib                                   
+|-- Rmd_sample.Rproj                            <- .Rproj that will set the working directory
+|-- Makefile                                    
+```
