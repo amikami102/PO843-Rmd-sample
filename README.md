@@ -1,18 +1,25 @@
-## PO843 Rmarkdown Sample
-This repository contains material for PO843 *Maximum Likelihood Estimation*'s Rmarkdown tutorial session. The goal of the tutorial is to show how to apply features of Rmarkdown and `knitr` to create reproducible manuscripts. The sample document (in ".html" and ".pdf" output) demonstrates 
+# PO843 Rmarkdown Sample
 
-- how to format the YAML to include
+## Overview
+This repository contains material for PO843 *Maximum Likelihood Estimation*'s Rmarkdown tutorial session. The goal of the tutorial is to show how to apply features of Rmarkdown and `knitr` to create reproducible manuscripts. The "sample-ta" document (available in both ".html" and ".pdf") demonstrates 
+
+- how to format the YAML to insert
     - the current date,
     - the abstract,
-    - \LaTeX packages
+    - LaTeX packages
     - parameters to be used in `rmarkdown::render()`; 
-- how to use `knitr` chunk options such as `echo`, `fig.path`, `dev`, `fig.align`;
+- how to use `knitr` chunk options globally and locally;
 - how to create tables for R output with `stargazer()` and `xtable()`;
 - how to insert a bibliography using external ".bib" file;
 - how to insert inline citation and footnotes;
-- how to insert cross references.  
+- how to create cross references.  
 
-Finally, this repository contains a "makefile" that automatically creates ".html" and ".pdf" out of "sample-ta.Rmd". According to Karl Broman, this is the most important tool to creating manuscripts for reproducible research, but it tends to be ignored. As "sample-ta.Rmd" creates both ".html" and ".pdf" documents and contains chunks whose functions depend on some parameters, a makefile automating file compilation is appropriate. 
+### Drawing with TikZ
+Additionally, there is a .tex file in the "script" folder that produces a directed-acyclic graph using TikZ. The output "dag.pdf" is saved in "fig" folder. 
+
+### Makefile
+Finally, this repository contains a "Makefile" that automatically creates ".html" and ".pdf" out of "sample-ta.Rmd" and "fig/dag.pdf" from "script/dag.tex". According to Karl Broman's ["Minimal Make"](http://kbroman.org/minimal_make/), [*GNU Make*](https://www.gnu.org/software/make/) is the most important tool for a reproducible research. As our "sample-ta.Rmd" creates both ".html" and ".pdf" documents and contains `knitr` chunks whose functions depend on some parameters, a makefile automating file compilation is appropriate. 
+
 
 ## Repository organization
 ```
@@ -22,9 +29,10 @@ Finally, this repository contains a "makefile" that automatically creates ".html
 |               |-- bank-additional-full.csv
 |               |-- bank-additional.csv
 |               |-- bank-additional-names.txt
-|-- fig                                         <- plots saved to .png
-|-- script                                      <- .R script files
-|       |-- bank-marketing.R
+|-- fig                                         <- figures saved to .png, .pdf
+|-- script                                      <- .R and .tex files
+|       |-- bank-marketing.R                    
+|       |-- dag.tex
 |-- tab                                         <- tables saved to .txt  
 |-- sample-ta.Rmd                                
 |-- sample.bib                                   
