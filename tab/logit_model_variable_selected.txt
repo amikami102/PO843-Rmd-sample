@@ -1,0 +1,30 @@
+
+Logistic regression model based on backwards stepwise variable selection
+===================================================
+                            Dependent variable:    
+                        ---------------------------
+                           telemarketing outcome   
+---------------------------------------------------
+contact--telephone            -0.953 (0.676)       
+contact--Aug                  -0.036 (0.806)       
+contact--Dec                  -0.702 (1.255)       
+contact--July                 -1.294 (0.878)       
+contact--June                  0.752 (0.765)       
+contact--Mar                   0.895 (0.928)       
+contact--May                   0.209 (0.553)       
+contact--Nov                  -1.462 (1.241)       
+contact--Oct                  -1.564 (1.350)       
+contact--Sep                  -2.049 (1.368)       
+duration                     0.006*** (0.001)      
+number of contacts made       -0.191 (0.122)       
+previous outcome             1.885*** (0.284)      
+CPI                          -2.246** (0.883)      
+Euribor 3mo. index            2.682** (1.287)      
+number of employees          -0.061*** (0.021)     
+Constant                   512.289*** (187.461)    
+---------------------------------------------------
+Observations                        596            
+Log Likelihood                   -193.424          
+Akaike Inf. Crit.                 420.847          
+===================================================
+Note:                   *p<0.1; **p<0.05; ***p<0.01

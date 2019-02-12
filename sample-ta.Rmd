@@ -1,0 +1,298 @@
+---
+title: "Sample Rmarkdown"
+author: "Asako Mikami"
+date: '`r format(Sys.time(), "%B %e, %Y")`'
+output:
+  bookdown::pdf_document2:
+    highlight: tango
+    number_section: true
+  bookdown::html_document2:
+    theme: readable
+    highlight: haddock
+    toc: true
+    toc_float: true
+    number_sections: false
+abstract: "This document demonstrates how to weave and execute R codes within an Rmarkdown document with `knitr`. The first section runs a simulation of simultaneous relationship. The second section runs a logistic regression model and displays the result table using the `xtable` and `stargazer` package. The output is available as both `.pdf` and `.html` documents. To render a `pdf` document, run `rmarkdown::render('sample-ta.Rmd', 'pdf_document', params = list(input_type = 'latex))`. To render an `.html` document, run `rmarkdown::render('sample-ta.Rmd', 'html_document', params = list(input_type = 'html'))`.\n"
+bibliography: "sample.bib"
+params:
+  input_type: "latex" # set to "latex" when rendering pdf
+header-includes: 
+  - \usepackage{booktabs}
+  - \usepackage{placeins} # for \FloatBarrier
+---
+
+```{r setup, message = FALSE, results = "hide"}
+# load library
+x <- c("dplyr", "purrr", "stargazer", "RColorBrewer", "knitr",
+       "xtable")
+lapply(x, library, character.only = TRUE, quietly = TRUE)
+
+# set up color palette to be used in this document  
+color <- brewer.pal(3, "Paired")
+```
+
+```{r global_chunk_option}
+# For this document, I want to show most of the R source code,
+# so I am setting the global option `echo = TRUE`. 
+#-----------------
+# I want to save my plot outputs as png and pdf files with
+# transparent backgroun din the `fig` folder: 
+# `fig.path = "fig/", dev = c("png", "pdf"), 
+# dev.args = list(bg = "transparent")`
+#-----------------
+# When the plot is displayed in the document, I want it to be 
+# aligned in the center, so I am setting `fig.align = "center"`.
+#-----------------
+knitr::opts_chunk$set(echo = TRUE, 
+                      fig.path = "fig/", 
+                      dev = c("png", "pdf"), 
+                      dev.args = list(bg = "transparent"),
+                      fig.align = "center")
+# --------------
+# All of these global options can be overwritten in each chunk. 
+# For example, in section 2, I am hiding some chunks by setting
+# `echo = FALSE` in the chunk header. 
+```
+
+
+# Simulating simultaneity
+
+Let's do some simulation of simultaneity.[^bellemare] Suppose we have the following data generating process:
+        \begin{align*}
+        Y &= \beta X + \epsilon_1, \quad \epsilon_1 \sim N(0, \sigma^2) \\
+        X &= \alpha Y + \epsilon_2, \quad  \epsilon_2 \sim N(0, \tau^2) \\
+        \epsilon_1 &\perp \epsilon_2
+        \end{align*}
+where $\alpha, \beta$ are real constants and $\sigma^2, \tau^2$ are positive constants. Solving this system of equations, we express $Y$ and $X$ free of each other. 
+        \begin{align*}
+        X & = \dfrac{\alpha \epsilon_1 + \epsilon_2}{1 - \alpha\beta} \\
+        Y & = \dfrac{\epsilon_1 + \beta \epsilon_2}{1- \alpha\beta}
+        \end{align*}
+This shows that $X$ and $Y$ are multivariate normal with mean zero. Without any loss of generality, we provide the proof for $\rm{E}[Y] = 0$. 
+        \begin{align*}
+        \rm{E}[Y] & = \rm{E}[\beta X + \epsilon_1] \\
+        & = \rm{E} \Big[\beta \Big( \dfrac{\alpha \epsilon_1 + \epsilon_2}{1-\alpha \beta} \Big)  + \epsilon_1 \Big]  \\
+        & = \dfrac{\beta}{1-\alpha\beta} \rm{E}\Big[\alpha \epsilon_1 + \epsilon_2  \Big] +\rm{E}[\epsilon_1] \\
+        & = \dfrac{\beta}{1-\alpha\beta} \Big( \alpha\rm{E}[\epsilon_1] + \rm{E}[\epsilon_2] \Big) + \rm{E}[\epsilon_1] \\
+        &= 0 \quad \text{because $\rm{E}[\epsilon_i] = 0$ for $i=1,2$} 
+        \end{align*}
+
+Under this data generating process, the least square estimate $\hat{\beta}$ of linear regression model, $\rm{E}[Y|X] = \beta X$, will be biased. 
+        \begin{align*}
+        \hat{\beta} & = \dfrac{\rm{Cov}(X, Y)}{\rm{Var}(X)} \quad \text{because $X$ is also random variable} \\
+        & = \dfrac{\rm{E}[XY]}{\rm{Var}(X)} \quad \text{because $\rm{Cov}(X,Y) = \rm{E}[XY]-\rm{E}[X]\rm{E}[Y] = \rm{E}[XY]$} \\
+        & = \dfrac{\rm{E} \Big[ \Big( \dfrac{\alpha \epsilon_1 + \epsilon_2}{1 - \alpha\beta} \Big)\Big( \dfrac{\epsilon_1 + \beta \epsilon_2}{1- \alpha\beta} \Big) \Big]}{\rm{Var} \Big( \dfrac{\alpha \epsilon_1 + \epsilon_2}{1 - \alpha\beta} \Big)} \\
+        & = \dfrac{\rm{E}[(\alpha \epsilon_1 + \epsilon_2)(\epsilon_1 + \beta \epsilon_2)]}{\alpha^2 \rm{Var}(\epsilon_1) + \rm{Var}(\epsilon_2)} \quad \text{because $\epsilon_1 \perp \epsilon_2$} \\
+        & = \dfrac{\rm{E}[\alpha \epsilon_1^2 + (\alpha\beta +1)\epsilon_1 \epsilon_2 + \beta \epsilon_2^2]}{\alpha^2 \rm{Var}(\epsilon_1) + \rm{Var}(\epsilon_2)} \\
+        & = \dfrac{\alpha\rm{E}(\epsilon_1^2) + (\alpha\beta + 1)\rm{E}[\epsilon_1]\rm{E}[\epsilon_2] + \beta \rm{E}(\epsilon_2)^2}{\alpha^2 \rm{Var}(\epsilon_1) + \rm{Var}(\epsilon_2)} \\
+        & = \dfrac{\alpha \rm{Var}(\epsilon_1) + \beta \rm{Var}(\epsilon_2)}{\alpha^2 \rm{Var}(\epsilon_1)+\rm{Var}(\epsilon_2)} \quad \text{because $\rm{Var}(\epsilon_i) = \rm{E}[\epsilon_i^2] - \rm{E}[\epsilon_i]^2 = \rm{E}[\epsilon_i^2]$ for $i \in \{1,2\}$} \\
+        & = \dfrac{\alpha \sigma^2 + \beta \tau^2}{\alpha^2 \sigma^2 + \tau^2} \quad \text{which is generally different from $\beta$}
+        \end{align*}
+
+```{r}
+set.seed(02052019)
+
+# set the parameters 
+param <- list(beta = sample(2:4, 1),
+              alpha = sample(7:9, 1)*-1, 
+              sigma2 = sample(c(0.3, 1, 1.5), 1),
+              tau2 = sample(c(0.2, 1, 1.4), 1),
+              n = 500
+        ) 
+
+run_ols <- function(param){
+        #---------------------
+        # Generates X and Y based on the true data
+        # generating process, using the parameters
+        # listed in `param`. 
+        # Output is ols coefficient estimates. 
+        #---------------------
+        # param (a list of parameters)
+        #---------------------
+        e1 <- rnorm(param$n, mean = 0, sd = param$sigma2)
+        e2 <- rnorm(param$n, mean = 0, sd = param$tau2)
+        X <- (param$alpha * e1  + e2)/(1 - param$alpha * param$beta)
+        Y <- (e1 + param$beta * e2)/(1 - param$alpha * param$beta)
+        ols <- lm(Y ~ X - 1) # no intercept 
+        return(coef(ols))
+} 
+
+# run simulation and store the result as dataframe
+sim <- 9999
+library(purrr)
+result <- map(seq(sim), ~ run_ols(param)) %>% 
+        map_dfr(~ as.data.frame(t(as.matrix(.))))
+```
+
+
+Let's plot the sampling distribution of ols estimates for $\beta$.[^reg]
+
+
+```{r hist_ols_estimates, fig.cap = "Sampling distribution of OLS estiamtes"}
+# plot the sample distribution of beta.hat
+hist(result$X, col = color[1], 
+     xlab = expression(hat(beta)), 
+     main = as.expression(bquote(beta==.(param$beta)~", "~
+                                  alpha==.(param$alpha)~", "~
+                                sigma^2==.(param$sigma2)~", "~
+                                tau^2==.(param$tau2)))
+     ) 
+```
+\FloatBarrier
+
+Let's simulate across $\beta \in \{0, \pm 0.5, \pm 1.0, \pm 1.5, \pm 2.0\}$, and plot the mean squared error, $(\rm{E}[\hat{\beta}] - \beta)^2$, against $\beta$. 
+
+```{r}
+beta <- seq(-2, 2, by = 0.5) # simulation values for beta
+sim <- 100 
+# create a list of parameter lists 
+param_list <- map(beta, ~update_list(param, beta = .))
+
+run_simulate <- function(param){
+        #---------------------------
+        # Simulate ols regression for `sim` number of 
+        # times for each `beta` value. 
+        # Obtain MSE(beta) of each simulation sample. 
+        #----------------------------
+        # param (a list of parameters)
+        #----------------------------
+        
+        # generate a sample of ols estimates 
+        sample <- seq(sim) %>% map(~run_ols(param)) %>%
+                map_df(~as.data.frame(.)) 
+        # obtain MSE
+        mse <- sample %>% map_df(~(mean(.)-param$beta)^2)
+        return(mse)
+}
+
+# simulate over `param_list`
+ols_mse <- map(param_list, ~run_simulate(.)) %>% 
+        map_df(~as.data.frame(t(as.matrix(.))))
+df <- cbind(beta, ols_mse) # bind with `beta` vector
+names(df) <- c("beta", "MSE") # name the columns
+```
+
+
+```{r mse_beta, fig.cap = "Mean squared error of OLS estimator"}
+# plot MSE against `beta`
+plot(MSE ~ beta, data = df, type = "l", 
+     col = color[2], lwd=1.2,
+     xlab = expression(beta))
+```
+\FloatBarrier
+
+# Bank marketing data set {#bank}
+
+We have data from a Portugese bank's telemarketing campaign where the outcome of interest is whethe a client subscribed to a term deposit at the end of the campaign:[^data]
+        $$Y_i = \begin{cases} 
+        1 & \quad \text{if client $i$ subscribed} \\
+        0  & \quad \text{otherwise} \end{cases}$$
+The code for [this section](#bank) is written in [`script/bank-marketing.R`](script/bank-marketing.R) and is printed out in the [Appendix](#appendix).[^code_external] 
+
+```{r, cache = FALSE, echo = FALSE}
+# read codes from "script/bank-marketing.R"
+knitr::read_chunk("script/bank-marketing.R")
+```
+
+```{r load_data, cache = FALSE, echo = FALSE}
+# This chunk is running part of "script/bank-marketing.R"
+# labelled "load_data". 
+```
+
+
+We want to model $\pi_i$, the probability that $Y_i = 1$, given a data matrix $X_i$:
+        $$ \rm{logit}(\pi_i) = \log \dfrac{\pi_i}{1-\pi_i} = X_i^T \beta.$$
+The data matrix consists of input variables that can be divided into three main groups[^variables]: 
+
+1. client's personal attributes such as her job, marital status, and education;
+2. attirbutes related to the last contact the client received from the campaign such as its month and day of the week;
+3. macroeconomic context attributes such as CPI, consumer confidence index, and Euribo 3-month index.
+
+Let's assess the relevance of these three groups of variables by Chi-square ANOVA test. Below I present the ANOVA output in a table created by `xtable::xtable()` function.[^xtable]
+
+
+```{r model_comparison, echo = FALSE}
+# This chunk is running part of "script/bank-marketing.R"
+# labelled "model_comparison". 
+```
+
+```{r anova, echo = FALSE}
+# This chunk is running part of "script/bank-marketing.R"
+# labelled "anova".
+```
+
+```{r anova_table, echo = FALSE, results = "asis"}
+gen_table(params$input_type)
+```
+\FloatBarrier
+
+The ANOVA table indicates that all three groups contain some variables that may be relevant for predicting the . Since we do not have a theory on the data-generating process, we run a stepwise variable selection to narrow down the input variables. The final model is summarized in the table below created by `stargazer::stargazer()`.[^stargazer]
+
+
+
+```{r step_selection, echo = FALSE}
+## This chunk is running part of "script/bank-marketing.R"
+## labelled "step_selection". 
+```
+
+
+```{r, warning=FALSE, results= "asis", echo = FALSE}
+## Using the output from "step_selection" chunk, we will
+## format the regression output using `stargazer` fxn. 
+stargazer(step.out, header = FALSE, out.header = FALSE,
+          type = params$input_type,
+          single.row = TRUE,
+          covariate.labels = c("contact--telephone",
+                               "contact--Aug", "contact--Dec",
+                               "contact--July", "contact--June",
+                               "contact--Mar", "contact--May",
+                               "contact--Nov", "contact--Oct",
+                               "contact--Sep", "duration",
+                               "number of contacts made", 
+                               "previous outcome",
+                               "CPI", "Euribor 3mo. index",
+                               "number of employees"),
+          dep.var.labels = c("telemarketing outcome"),
+          title = "Logistic regression model based on backwards stepwise variable selection",
+          # save output to file
+          out = "tab/logit_model_variable_selected.txt"
+)
+```
+\FloatBarrier
+
+<!-- Footnotes --> 
+[^bellemare]: This example is adapted from @haavelmo and @bellemare. 
+[^reg]: See [this R-blogger post](https://www.r-bloggers.com/math-notation-for-r-plot-titles-expression-and-bquote/) for more details on how to write mixed expression in plot captions and titles. 
+[^data]: The data set is available for download at [UCI's Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/Bank+Marketing). Details of the dataset are available in @moro2014data.
+[^variables]: For details on each variable, see [the data description `.txt` file](data/bank-additional/bank-additional-names.txt).
+[^xtable]: There are other options such as `pander::pander()` and `knitr::kable()` that can create tables out of `R` output. See [this manual](https://cran.r-project.org/web/packages/xtable/vignettes/xtableGallery.pdf) for how to use `xtable()`.
+[^stargazer]: Though the output format is `html`, [this manual](https://www.jakeruss.com/cheatsheets/stargazer/) by Jake Russ is helpful for learning how to use `stargazer()`. For \LaTeX-specific manual, see [this manual](https://cran.r-project.org/web/packages/stargazer/vignettes/stargazer.pdf) by Marek Hlavac. 
+[^code_external]: See [this page](https://yihui.name/knitr/demo/externalization/) from https://yihui.name/knitr/ and the linked examples to learn more about how to externalize codes. 
+
+# Reference
+
+```{r reference}
+## By default, the reference section appears at the end of 
+## the document. 
+## If you want to put the reference section before 
+## the appendix, insert the following html line where
+## you want the reference section to show: 
+## <div id="refs"></div>
+```
+
+<div id="refs"></div>
+
+# Code Appendix {#appendix}
+
+```{r, code = readLines("script/bank-marketing.R"), eval = FALSE}
+## The chunk option,
+## `code = readLines("script/bank-marketing.R")`,
+## reads the lines from the .R script file.
+```
+
+# Session Info
+
+```{r}
+sessionInfo()
+```
+
