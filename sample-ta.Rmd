@@ -201,7 +201,7 @@ knitr::read_chunk("script/bank-marketing.R")
 
 
 We want to model $\pi_i$, the probability that $Y_i = 1$, given a data matrix $X_i$:
-        $$ \rm{logit}(\pi_i) = \log \dfrac{\pi_i}{1-\pi_i} = X_i^T \beta.$$
+        $$ \rm{logit}(\pi_i) = \log \dfrac{\pi_i}{1-\pi_i} = X_i^T.$$
 The data matrix consists of input variables that can be divided into three main groups[^variables]: 
 
 1. client's personal attributes such as her job, marital status, and education;
@@ -226,7 +226,7 @@ gen_table(params$input_type)
 ```
 \FloatBarrier
 
-The ANOVA table indicates that all three groups contain some variables that may be relevant for predicting the . Since we do not have a theory on the data-generating process, we run a stepwise variable selection to narrow down the input variables. The final model is summarized in the table below created by `stargazer::stargazer()`.[^stargazer]
+The ANOVA table indicates that all three groups contain some variables that may be relevant for predicting the . Since we do not have a theory on the data-generating process, we run a stepwise variable selection to narrow down the input variables. The final model is summarized in the table below created by `stargazer::stargazer()`.[^stargazer] 
 
 
 
