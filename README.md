@@ -39,3 +39,4 @@ Finally, this repository contains a "Makefile" that automatically creates ".html
 |-- Rmd_sample.Rproj                            <- .Rproj that will set the working directory
 |-- Makefile                                    
 ```
+https://github.com/amikami102/PO843-Rmd-sample.git 
